@@ -26,12 +26,11 @@
             </div>
             <input
                 type="text"
-                v-model="newSidebarItemName"
-                @input="updateTemporarySidebarItemName"
+                v-model="$store.state.sidebarItemTemporaryName[this.sidebarItem._id]"
                 style="pointer-events: auto; border: 0; outline: 0; width: 100%; padding: 0; background-color: inherit; font-style: italic;"
                 spellcheck="false"
-                @keydown.enter="saveSidebarItemName(sidebarItem); showInputToRenameRequest = false"
-                @keydown.esc="showInputToRenameRequest = false"
+                @keydown.enter="$event.target.blur()"
+                @keydown.esc="$store.state.sidebarItemTemporaryName[this.sidebarItem._id] = sidebarItem.name; $event.target.blur()"
                 @blur="saveSidebarItemName(sidebarItem)"
                 @dblclick.stop
                 v-focus
@@ -65,7 +64,6 @@ export default {
     data() {
         return {
             showInputToRenameRequest: false,
-            newSidebarItemName: null
         }
     },
     computed: {
@@ -89,7 +87,7 @@ export default {
         },
         handleSidebarItemDoubleClick(sidebarItem) {
             if(sidebarItem._type === 'request') {
-                this.newSidebarItemName = sidebarItem.name
+                this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id] = sidebarItem.name
                 this.showInputToRenameRequest = true
             }
         },
@@ -108,26 +106,22 @@ export default {
             this.$store.commit('updateCollectionItemName', {
                 _id: sidebarItem._id,
                 _type: sidebarItem._type,
-                name: this.newSidebarItemName
+                name: this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id]
             })
 
             const sidebarItemToUpdate = findItemInTreeById(this.$store.state.collectionTree, sidebarItem._id)
             if(sidebarItemToUpdate) {
-                sidebarItemToUpdate.name = this.newSidebarItemName
+                sidebarItemToUpdate.name = this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id]
             }
 
             const tab = this.$store.state.tabs.find(tab => tab._id === sidebarItem._id)
             if(tab) {
-                tab.name = this.newSidebarItemName
+                tab.name = this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id]
             }
 
             delete this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id]
-            this.newSidebarItemName = null
             this.showInputToRenameRequest = false
         },
-        updateTemporarySidebarItemName() {
-            this.$store.state.sidebarItemTemporaryName[this.sidebarItem._id] = this.newSidebarItemName
-        }
     }
 }
 </script>
